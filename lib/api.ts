@@ -79,3 +79,13 @@ export async function getLoans() {
   ]
 }
 
+export async function makeDeposit(data: any) {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 1500))
+
+  // In a real app, you would save this data to a database
+  console.log("Deposit made:", data)
+
+  return { success: true, id: Math.random().toString(36).substring(7) }
+}
+
