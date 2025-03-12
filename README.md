@@ -13,4 +13,5 @@ python manage.py runserver
   http://localhost:8000/api
 
 Assumptions made
+- I used Next js because the use react alone is depleted as it is advised to use a framework preferably Next js 
 - The use of a database is essential but can not be implemented within the short time interval given to really bring out the aim of the prject challenge
