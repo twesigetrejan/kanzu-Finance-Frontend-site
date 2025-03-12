@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { login } from "@/lib/auth"
-import Link from "next/link"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -38,11 +37,7 @@ export function LoginForm() {
       router.push("/dashboard")
       router.refresh()
     } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message)
-      } else {
-        setError("Invalid email or password. Please try again.")
-      }
+      setError("Invalid email or password. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -84,13 +79,6 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Signing in..." : "Sign In"}
         </Button>
-
-        <div className="text-center text-sm">
-          <span className="text-muted-foreground">Don't have an account? </span>
-          <Link href="/auth/signup" className="text-primary hover:underline">
-            Sign up
-          </Link>
-        </div>
       </form>
     </Form>
   )

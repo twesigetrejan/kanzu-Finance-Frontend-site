@@ -2,104 +2,68 @@
 
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { createServerClient } from "@supabase/ssr"
-import { supabase } from "./supabase"
 
-export async function login(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
+// This is a simplified auth implementation for demonstration purposes
+// In a real application, you would use a proper auth library like NextAuth.js or Auth.js
 
-  if (error) {
-    throw new Error(error.message)
+interface Session {
+  user: {
+    id: string
+    name: string
+    email: string
   }
-
-  return data.session
+  expires: string
 }
 
-export async function signup(email: string, password: string, fullName: string) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
+export async function login(email: string, password: string) {
+  // In a real app, you would validate credentials against a database
+  if (email === "demo@example.com" && password === "password") {
+    const session: Session = {
+      user: {
+        id: "1",
+        name: "John Doe",
+        email: "demo@example.com",
       },
-    },
-  })
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    }
 
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  // Create a profile for the new user
-  if (data.user) {
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: data.user.id,
-      full_name: fullName,
-      email: email,
-      phone_number: "", // Add a default empty string for phone_number
+    cookies().set("session", JSON.stringify(session), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/",
     })
 
-    if (profileError) {
-      console.error("Error creating profile:", profileError)
-      throw new Error(profileError.message)
-    }
+    return session
   }
 
-  return data.session
+  throw new Error("Invalid credentials")
 }
 
 export async function logout() {
-  const { error } = await supabase.auth.signOut()
-
-  if (error) {
-    console.error("Error signing out:", error)
-  }
-
+  cookies().delete("session")
   redirect("/")
 }
 
-export async function getSession() {
-  const { data, error } = await supabase.auth.getSession()
+export async function getSession(): Promise<Session | null> {
+  const sessionCookie = cookies().get("session")
 
-  if (error) {
-    console.error("Error getting session:", error)
+  if (!sessionCookie) {
     return null
   }
 
-  return data.session
-}
+  try {
+    const session: Session = JSON.parse(sessionCookie.value)
 
-export async function getUser() {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
+    // Check if session is expired
+    if (new Date(session.expires) < new Date()) {
+      cookies().delete("session")
+      return null
+    }
 
-  if (error || !user) {
+    return session
+  } catch (error) {
     return null
   }
-
-  return user
-}
-
-export async function createServerSupabaseClient() {
-  const cookieStore = cookies()
-
-  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-    cookies: {
-      get(name) {
-        return cookieStore.get(name)?.value
-      },
-      set(name, value, options) {
-        cookieStore.set({ name, value, ...options })
-      },
-      remove(name, options) {
-        cookieStore.delete({ name, ...options })
-      },
-    },
-  })
 }
 
