@@ -2,68 +2,104 @@
 
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-
-// This is a simplified auth implementation for demonstration purposes
-// In a real application, you would use a proper auth library like NextAuth.js or Auth.js
-
-interface Session {
-  user: {
-    id: string
-    name: string
-    email: string
-  }
-  expires: string
-}
+import { createServerClient } from "@supabase/ssr"
+import { supabase } from "./supabase"
 
 export async function login(email: string, password: string) {
-  // In a real app, you would validate credentials against a database
-  if (email === "demo@example.com" && password === "password") {
-    const session: Session = {
-      user: {
-        id: "1",
-        name: "John Doe",
-        email: "demo@example.com",
-      },
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    }
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
 
-    cookies().set("session", JSON.stringify(session), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60,
-      path: "/",
-    })
-
-    return session
+  if (error) {
+    throw new Error(error.message)
   }
 
-  throw new Error("Invalid credentials")
+  return data.session
+}
+
+export async function signup(email: string, password: string, fullName: string) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+      },
+    },
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  // Create a profile for the new user
+  if (data.user) {
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: data.user.id,
+      full_name: fullName,
+      email: email,
+      phone_number: "", // Add a default empty string for phone_number
+    })
+
+    if (profileError) {
+      console.error("Error creating profile:", profileError)
+      throw new Error(profileError.message)
+    }
+  }
+
+  return data.session
 }
 
 export async function logout() {
-  cookies().delete("session")
+  const { error } = await supabase.auth.signOut()
+
+  if (error) {
+    console.error("Error signing out:", error)
+  }
+
   redirect("/")
 }
 
-export async function getSession(): Promise<Session | null> {
-  const sessionCookie = cookies().get("session")
+export async function getSession() {
+  const { data, error } = await supabase.auth.getSession()
 
-  if (!sessionCookie) {
+  if (error) {
+    console.error("Error getting session:", error)
     return null
   }
 
-  try {
-    const session: Session = JSON.parse(sessionCookie.value)
+  return data.session
+}
 
-    // Check if session is expired
-    if (new Date(session.expires) < new Date()) {
-      cookies().delete("session")
-      return null
-    }
+export async function getUser() {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
 
-    return session
-  } catch (error) {
+  if (error || !user) {
     return null
   }
+
+  return user
+}
+
+export async function createServerSupabaseClient() {
+  const cookieStore = cookies()
+
+  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookies: {
+      get(name) {
+        return cookieStore.get(name)?.value
+      },
+      set(name, value, options) {
+        cookieStore.set({ name, value, ...options })
+      },
+      remove(name, options) {
+        cookieStore.delete({ name, ...options })
+      },
+    },
+  })
 }
 

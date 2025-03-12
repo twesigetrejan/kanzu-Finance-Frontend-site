@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -8,47 +8,93 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { updateProfile } from "@/lib/api"
+import { updateProfile, getProfile } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
-  fullName: z.string().min(2, {
+  full_name: z.string().min(2, {
     message: "Full name must be at least 2 characters",
   }),
   email: z.string().email({
     message: "Please enter a valid email address",
   }),
-  phone: z.string().min(10, {
-    message: "Phone number must be at least 10 characters",
-  }),
-  address: z.string().min(5, {
-    message: "Address must be at least 5 characters",
-  }),
-  idNumber: z.string().min(5, {
-    message: "ID number must be at least 5 characters",
-  }),
-  occupation: z.string().min(2, {
-    message: "Occupation must be at least 2 characters",
-  }),
-  bio: z.string().optional(),
+  phone_number: z
+    .string()
+    .min(10, {
+      // Changed from 'phone' to 'phone_number'
+      message: "Phone number must be at least 10 characters",
+    })
+    .optional()
+    .or(z.literal("")),
+  address: z
+    .string()
+    .min(5, {
+      message: "Address must be at least 5 characters",
+    })
+    .optional()
+    .or(z.literal("")),
+  id_number: z
+    .string()
+    .min(5, {
+      message: "ID number must be at least 5 characters",
+    })
+    .optional()
+    .or(z.literal("")),
+  occupation: z
+    .string()
+    .min(2, {
+      message: "Occupation must be at least 2 characters",
+    })
+    .optional()
+    .or(z.literal("")),
+  bio: z.string().optional().or(z.literal("")),
 })
 
 export function ProfileForm() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1234567890",
-      address: "123 Main St, City, Country",
-      idNumber: "ID12345678",
-      occupation: "Software Engineer",
-      bio: "Member since 2020",
+      full_name: "",
+      email: "",
+      phone_number: "",
+      address: "",
+      id_number: "",
+      occupation: "",
+      bio: "",
     },
   })
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const profile = await getProfile()
+        form.reset({
+          full_name: profile.full_name || "",
+          email: profile.email || "",
+          phone_number: profile.phone_number || "", // Changed from 'phone' to 'phone_number'
+          address: profile.address || "",
+          id_number: profile.id_number || "",
+          occupation: profile.occupation || "",
+          bio: profile.bio || "",
+        })
+      } catch (error) {
+        console.error("Error loading profile:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load profile. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingProfile(false)
+      }
+    }
+
+    loadProfile()
+  }, [form, toast])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
@@ -70,13 +116,21 @@ export function ProfileForm() {
     }
   }
 
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
-            name="fullName"
+            name="full_name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Full Name</FormLabel>
@@ -104,7 +158,7 @@ export function ProfileForm() {
 
           <FormField
             control={form.control}
-            name="phone"
+            name="phone_number" // Changed from 'phone' to 'phone_number'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
@@ -118,7 +172,7 @@ export function ProfileForm() {
 
           <FormField
             control={form.control}
-            name="idNumber"
+            name="id_number"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>ID Number</FormLabel>

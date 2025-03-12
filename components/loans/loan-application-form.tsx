@@ -23,7 +23,7 @@ const formSchema = z.object({
   purpose: z.string().min(10, {
     message: "Purpose must be at least 10 characters",
   }),
-  collateral: z.string().optional(),
+  // Removed collateral field as it doesn't exist in the schema
 })
 
 export function LoanApplicationForm() {
@@ -37,7 +37,7 @@ export function LoanApplicationForm() {
       amount: "",
       term: "",
       purpose: "",
-      collateral: "",
+      // Removed collateral field
     },
   })
 
@@ -127,20 +127,7 @@ export function LoanApplicationForm() {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="collateral"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Collateral (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter collateral details" {...field} />
-                </FormControl>
-                <FormDescription>Specify any assets you're offering as collateral</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Removed collateral field */}
         </div>
 
         <FormField
