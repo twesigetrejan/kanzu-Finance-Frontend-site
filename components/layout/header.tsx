@@ -84,9 +84,7 @@ export function Header() {
             <DropdownMenuItem asChild>
               <a href="/profile">Profile</a>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <a href="/settings">Settings</a>
-            </DropdownMenuItem>
+            
             <DropdownMenuItem onClick={() => logout()}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,15 +1,23 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { updateProfile } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { updateProfile } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -31,42 +39,42 @@ const formSchema = z.object({
     message: "Occupation must be at least 2 characters",
   }),
   bio: z.string().optional(),
-})
+});
 
 export function ProfileForm() {
-  const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1234567890",
-      address: "123 Main St, City, Country",
+      fullName: "Twesige Trejan",
+      email: "trejantwesige19@gmail.com",
+      phone: "+256755835030",
+      address: "Kampala, Uganda",
       idNumber: "ID12345678",
       occupation: "Software Engineer",
       bio: "Member since 2020",
     },
-  })
+  });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      await updateProfile(values)
+      await updateProfile(values);
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
-      })
+      });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -166,9 +174,15 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Bio</FormLabel>
               <FormControl>
-                <Textarea placeholder="Tell us about yourself" className="min-h-[100px]" {...field} />
+                <Textarea
+                  placeholder="Tell us about yourself"
+                  className="min-h-[100px]"
+                  {...field}
+                />
               </FormControl>
-              <FormDescription>This information will be displayed on your profile</FormDescription>
+              <FormDescription>
+                This information will be displayed on your profile
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -181,6 +195,5 @@ export function ProfileForm() {
         </div>
       </form>
     </Form>
-  )
+  );
 }
-
