@@ -1,4 +1,5 @@
 This is the Kanzu Banking Software Engineering Coding Challenge 
+Link to Youtube video - https://youtu.be/3YBvrzOctX0
 To run the project after cloning it:
 1. Installation of packages, use the command below at the root of the project
 pnpm install
